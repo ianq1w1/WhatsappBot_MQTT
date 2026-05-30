@@ -1,0 +1,79 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: evolution_postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: evolution_redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  evolution:
+    image: evoapicloud/evolution-api:latest
+    container_name: evolution
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    ports:
+      - "8080:8080"
+
+    environment:
+
+      # Segurança
+      AUTHENTICATION_API_KEY: ${AUTHENTICATION_API_KEY}
+
+      # Banco
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "postgresql"
+      DATABASE_CONNECTION_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+
+      # Redis
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: "redis://redis:6379/0"
+
+    volumes:
+      - evolution_instances:/evolution/instances
+
+volumes:
+  postgres_data:
+  redis_data:
+  evolution_instances:
