@@ -1,0 +1,8 @@
+{
+  "allowedNumbers": [
+    "00000000"
+  ]
+}
+
+//it must be and phone number
+//this file have to be a .json named "allowlist.json"
