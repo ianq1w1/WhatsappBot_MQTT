@@ -1,2 +1,2 @@
 .env
-./node-app/allowlist.json
+/node-app/allowlist.json
