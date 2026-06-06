@@ -9,41 +9,49 @@ const allowlist = JSON.parse(
   fs.readFileSync("./allowlist.json", "utf8")
 );
 
-app.post("/webhook", (req, res) => {
 
-  // só mensagens novas
+app.post("/webhook", (req, res) => {
+  
   if (req.body.event !== "messages.upsert") {
     return res.sendStatus(200);
   }
 
   const data = req.body.data;
+  const ageSeconds =
+  (Date.now() - data.messageTimestamp * 1000) / 1000;
 
-  // ignora mensagens enviadas por você
-  if (data.key.fromMe) {
+  const jid = data.key?.remoteJid;
+
+  if (!jid) {
     return res.sendStatus(200);
   }
 
-  const remoteJid = data.key.remoteJid;
+  const [numero, dominio] = jid.split("@");
 
-  // ignora grupos
-  if (remoteJid.endsWith("@g.us")) {
+  if (dominio !== "s.whatsapp.net") {
     return res.sendStatus(200);
   }
 
-  const numero = remoteJid.split("@")[0];
-
-  // verifica allowlist
-  if (!allowlist.allowedNumbers.includes(numero)) {
-    console.log(`Número não autorizado: ${numero}`);
-    return res.sendStatus(200);
+  if(ageSeconds < 60){
+    console.log({
+      numero,
+      texto: data.message?.conversation
+    });
   }
 
-  const texto = data.message?.conversation;
+  return res.sendStatus(200);
 
-  console.log("Número autorizado:", numero);
-  console.log("Mensagem:", texto);
+/*  if(dominio != "s.whatsapp.net" && eventoMsg == false || dominio != "s.whatsapp.net" && eventoMsg == true){
+    res.sendStatus(200)
+    console.log("nao é msg do pv")
+  }else{
+    console.log("oi")
+  }*/
 
-  res.sendStatus(200);
+   //console.log(data)
+
+  //return res.sendStatus(200);
+
 });
 
 app.listen(3000, () => {
