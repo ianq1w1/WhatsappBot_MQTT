@@ -1,15 +1,44 @@
 const express = require("express");
-const fs = require("fs");
+const fs = require("fs/promises");
 
 const app = express();
 
 app.use(express.json());
 
-const allowlist = JSON.parse(
-  fs.readFileSync("./allowlist.json", "utf8")
-);
+
+//endpoint pra inserir dados na allowlist.json
+app.post("/insert", async (req,res) => {
+ 
+  try{
+    //console.log("oi")
+    const content = await fs.readFile("allowlist.json", "utf8");
+    const allowlist = JSON.parse(content)
+    const data = req.body
 
 
+    const allowed = allowlist.allowedNumbers
+    //console.log(content)
+    //console.log(data)
+    //console.log(allowlist.allowedNumbers)
+
+    //o corpo do json desse POST deve ser "num" : "000000000000"
+    allowed.push(data.num);
+    //console.log(data)
+
+    await fs.writeFile(
+      'allowlist.json',
+      JSON.stringify(allowed, null, 2)
+    );
+      
+    res.json({ sucesso: true });
+
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+
+})
+
+//webhook endpoint
 app.post("/webhook", (req, res) => {
   
   //verifica se é o evento de envio de mensagem

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrada de Dados</title>
+</head>
+<script></script>
+<body>
+
+    <h1>Inserir Dados</h1>
+
+    <input type="text" id="dados" placeholder="Digite algo">
+    <button onclick="enviarDados()">Enviar</button>
+
+    <p id="resultado"></p>
+
+    <script>
+        function enviarDados() {
+            const valor = document.getElementById('dados').value;
+            document.getElementById('resultado').textContent =
+                'Você digitou: ' + valor;
+        }
+    </script>
+
+</body>
+</html>
