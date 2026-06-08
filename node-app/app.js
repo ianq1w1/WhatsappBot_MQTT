@@ -27,7 +27,7 @@ app.post("/insert", async (req,res) => {
 
     await fs.writeFile(
       'allowlist.json',
-      JSON.stringify(allowed, null, 2)
+      JSON.stringify(allowlist, null, 2)
     );
       
     res.json({ sucesso: true });
