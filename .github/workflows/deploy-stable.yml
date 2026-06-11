@@ -1,0 +1,26 @@
+name: Deploy Stable
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'nginx/**'
+      - 'docker-compose.yml'
+      - 'docker-compose.nginx.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd ~/WhatsappBot_MQTT
+            git pull origin main
+            docker compose -f docker-compose.yml up -d
+            docker compose -f docker-compose.nginx.yml up -d
