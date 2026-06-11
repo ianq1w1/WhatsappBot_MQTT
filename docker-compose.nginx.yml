@@ -1,0 +1,17 @@
+services:
+  nginx:
+    container_name: nginx_container
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app-network
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+
+    restart: unless-stopped
+
+networks:
+  app-network:
+    external: true

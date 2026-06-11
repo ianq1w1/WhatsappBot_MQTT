@@ -2,8 +2,15 @@ services:
   webhook-app:
     build: ./node-app
     container_name: webhook-app-js
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
+    networks:
+      - app-network
+
     volumes:
       - ./node-app/allowlist.json:/app/allowlist.json
     restart: unless-stopped
+
+networks:
+  app-network:
+    external: true

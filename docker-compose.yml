@@ -72,6 +72,12 @@ services:
 
     volumes:
       - evolution_instances:/evolution/instances
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
 
 volumes:
   postgres_data:
