@@ -1,0 +1,22 @@
+name: Deploy App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'node-app/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd ~/whatsappbot_mqtt
+            git pull origin main
+            docker compose -f docker-compose.app.yml up --build -d
