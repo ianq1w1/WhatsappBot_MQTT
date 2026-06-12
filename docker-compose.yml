@@ -17,6 +17,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - app-network
+      
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
@@ -34,6 +37,9 @@ services:
 
     volumes:
       - redis_data:/data
+      
+    networks:
+      - app-network
 
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
