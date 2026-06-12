@@ -19,4 +19,4 @@ jobs:
           script: |
             cd ~/WhatsappBot_MQTT
             git pull origin main
-            docker compose -f docker-compose.app.yml up --build -d
+            sudo docker compose -f docker-compose.app.yml up --build -d
