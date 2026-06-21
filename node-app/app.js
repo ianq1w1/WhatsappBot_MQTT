@@ -6,6 +6,29 @@ const app = express();
 
 app.use(express.json());
 
+//enviar mensagem via HTTP
+async function enviarMensagem(numero, texto) {
+  const response = await fetch('http://localhost:8080/message/sendText/testeV3', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': ''
+    },
+    body: JSON.stringify({
+      number: numero,
+      text: texto
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro ao enviar mensagem: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data
+}
+
+
 //funcao para enviar texto pro endpoint da IA
 async function IAsend(text){
   //app.post("/")
@@ -91,6 +114,8 @@ app.post("/webhook", (req, res) => {
     
     message = data.message?.conversation
     IAsend(message)
+    //enviarMensagem("", "tchau")
+
   }
 
   return res.sendStatus(200);
