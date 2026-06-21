@@ -1,9 +1,21 @@
+const ollama = require("ollama").default;
 const express = require("express");
 const fs = require("fs/promises");
 
 const app = express();
 
 app.use(express.json());
+
+//funcao para enviar texto pro endpoint da IA
+async function IAsend(text){
+  //app.post("/")
+
+  const response = await ollama.chat({
+  model: 'qwen:1.8b',
+  messages: [{ role: 'user', content: text }],
+  })
+  console.log(response.message.content)
+}
 
 
 //endpoint pra inserir dados na allowlist.json
@@ -75,9 +87,10 @@ app.post("/webhook", (req, res) => {
   //mostra a mensagem mais recente enviada em até 60 segundos em relação ao tempo atual 
   if(ageSeconds < 60){
     console.log({
-      numero,
-      texto: data.message?.conversation
-    });
+      numero, texto: data.message?.conversation});
+    
+    message = data.message?.conversation
+    IAsend(message)
   }
 
   return res.sendStatus(200);
