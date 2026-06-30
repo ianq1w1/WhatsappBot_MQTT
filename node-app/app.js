@@ -1,9 +1,17 @@
 const express = require("express");
 const fs = require("fs/promises");
+const path = require("path");
 
 const app = express();
 
 app.use(express.json());
+
+app.use(express.static(path.join(__dirname, "frontend/html")));
+
+//faz com que o html apareça
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/html/main.html"));
+});
 
 
 //endpoint pra inserir dados na allowlist.json
