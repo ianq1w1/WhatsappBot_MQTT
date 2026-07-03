@@ -24,3 +24,6 @@ jobs:
             git pull origin main
             sudo docker compose -f docker-compose.yml up -d
             sudo docker compose -f docker-compose.nginx.yml up -d
+
+            sudo docker exec nginx_container nginx -t
+            sudo docker exec nginx_container nginx -s reload
