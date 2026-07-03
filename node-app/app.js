@@ -14,6 +14,45 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/html/main.html"));
 });
 
+//enviar mensagem via HTTP
+async function enviarMensagem(numero, texto) {
+  //esse ultimo no final é o nome da instancia
+  const response = await fetch('http://localhost:8080/message/sendText/testeV3', {
+    method: 'POST',
+    //a apikey deve estar no .env-app, ele é gerado junto com a instância
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': ''
+    },
+    body: JSON.stringify({
+      number: numero,
+      text: texto
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro ao enviar mensagem: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data
+}
+
+
+//funcao para enviar texto pro endpoint da IA
+async function IAsend(text){
+  //app.post("/")
+
+  const response = await ollama.chat({
+  model: 'qwen3.5:2b',
+  options: {temperature: 0.1},
+  messages: [
+    {role: 'system', content: 'você só fala em português, se o texto for em inglês, você diz que não sabe, ou evita tocar no assunto, mas em hipótese nenhuma fale em inglês'},
+    { role: 'user', content: text }]
+})
+  console.log(response.message.content)
+}
+
 
 //endpoint pra inserir dados na allowlist.json
 app.post("/insert", async (req,res) => {
