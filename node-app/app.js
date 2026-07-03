@@ -1,3 +1,4 @@
+const ollama = require("ollama").default;
 const express = require("express");
 const fs = require("fs/promises");
 const path = require("path");
@@ -12,6 +13,45 @@ app.use(express.static(path.join(__dirname, "frontend/html")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/html/main.html"));
 });
+
+//enviar mensagem via HTTP
+async function enviarMensagem(numero, texto) {
+  //esse ultimo no final é o nome da instancia
+  const response = await fetch('http://localhost:8080/message/sendText/testeV3', {
+    method: 'POST',
+    //a apikey deve estar no .env-app, ele é gerado junto com a instância
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': ''
+    },
+    body: JSON.stringify({
+      number: numero,
+      text: texto
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro ao enviar mensagem: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data
+}
+
+
+//funcao para enviar texto pro endpoint da IA
+async function IAsend(text){
+  //app.post("/")
+
+  const response = await ollama.chat({
+  model: 'qwen3.5:2b',
+  options: {temperature: 0.1},
+  messages: [
+    {role: 'system', content: 'você só fala em português, se o texto for em inglês, você diz que não sabe, ou evita tocar no assunto, mas em hipótese nenhuma fale em inglês'},
+    { role: 'user', content: text }]
+})
+  console.log(response.message.content)
+}
 
 
 //endpoint pra inserir dados na allowlist.json
@@ -80,14 +120,16 @@ app.post("/webhook", (req, res) => {
     return res.sendStatus(200)
   }
 
-  //mostra a mensagem mais recente enviada em até 60 segundos em relação ao tempo atual 
+  //mostra a mensagem mais recente enviada em até 60 segundos em relação ao tempo atual
+  message = data.message?.conversation 
   if(ageSeconds < 60){
     console.log({
-      numero,
-      texto: data.message?.conversation
-    });
+      numero, texto: data.message?.conversation});
+       IAsend(message)
+    console.log("mensagem enviada para a IA")
+    console.log(message)
+      return res.sendStatus(200);
   }
-
   return res.sendStatus(200);
 
 });
