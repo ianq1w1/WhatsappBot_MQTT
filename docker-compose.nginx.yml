@@ -9,6 +9,7 @@ services:
       - app-network
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./node-app/frontend/html:/usr/share/nginx/html
 
     restart: unless-stopped
 
