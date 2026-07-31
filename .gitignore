@@ -1,3 +1,6 @@
 .env
 .env-app
 /node-app/allowlist.json
+/volumedata/evolution-app/
+/volumedata/postgres/
+/volumedata/redis/
