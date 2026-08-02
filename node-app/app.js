@@ -125,8 +125,8 @@ app.post("/webhook", (req, res) => {
   if(ageSeconds < 60){
     console.log({
       numero, texto: data.message?.conversation});
-       IAsend(message)
-    console.log("mensagem enviada para a IA")
+       //IAsend(message)
+      //console.log("mensagem enviada para a IA")
     console.log(message)
       return res.sendStatus(200);
   }
