@@ -1,12 +1,15 @@
-const ollama = require("ollama").default;
 const express = require("express");
+const ollama = require("ollama").default;
 const fs = require("fs/promises");
 const path = require("path");
 
+const env = require("dotenv").config({ path : ".env-app"})
+const ollama_url = process.env.OLLAMA_IP;
+
+console.log(ollama_url);
+
 const app = express();
-
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, "frontend/html")));
 
 //faz com que o html apareça
@@ -17,7 +20,7 @@ app.get("/", (req, res) => {
 //enviar mensagem via HTTP
 async function enviarMensagem(numero, texto) {
   //esse ultimo no final é o nome da instancia
-  const response = await fetch('http://localhost:8080/message/sendText/testeV3', {
+  const response = await fetch('http://${ollama_url}:8080/message/sendText/testeV3', {
     method: 'POST',
     //a apikey deve estar no .env-app, ele é gerado junto com a instância
     headers: {
