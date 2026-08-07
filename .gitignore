@@ -1,6 +1,13 @@
 .env
 /node-app/.env-app
 /node-app/allowlist.json
+
+#esta exclamação serve para negar o .gitignore neste arquivo (no caso o .gitkeep)
 /volumedata/evolution-app/*
+!/volumedata/evolution-app/.gitkeep
+
 /volumedata/postgres/*
+!/volumedata/postgres/.gitkeep
+
 /volumedata/redis/*
+!/volumedata/redis/.gitkeep
