@@ -18,5 +18,5 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd ~/WhatsappBot_MQTT
-            git pull origin main
+            sudo git pull origin main
             sudo docker compose -f docker-compose.app.yml up --build -d
