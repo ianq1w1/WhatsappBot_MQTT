@@ -3,8 +3,8 @@ const ollama = require("ollama").default;
 const fs = require("fs/promises");
 const path = require("path");
 
-const env = require("dotenv").config({ path : ".env-app"})
-const ollama_url = process.env.OLLAMA_IP;
+//const env = require("dotenv").config({ path : ".env-app"})
+//const ollama_url = process.env.OLLAMA_IP;
 
 console.log(ollama_url);
 
