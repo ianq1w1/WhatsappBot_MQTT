@@ -6,10 +6,10 @@ const path = require("path");
 //const env = require("dotenv").config({ path : ".env-app"})
 //const ollama_url = process.env.OLLAMA_IP;
 
-console.log(ollama_url);
+//console.log(ollama_url);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, "frontend/html")));
 
 //faz com que o html apareça
@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
 //enviar mensagem via HTTP
 async function enviarMensagem(numero, texto) {
   //esse ultimo no final é o nome da instancia
-  const response = await fetch('http://${ollama_url}:8080/message/sendText/testeV3', {
+  const response = await fetch(`http://${ollama_url}:8080/message/sendText/testeV3`, {
     method: 'POST',
     //a apikey deve estar no .env-app, ele é gerado junto com a instância
     headers: {
@@ -89,9 +89,41 @@ app.post("/insert", async (req,res) => {
 
 })
 
+app.post("/delete", async (req, res) => {
+  try {
+    const content = await fs.readFile("allowlist.json", "utf8");
+    const allowlist = JSON.parse(content);
+
+    const data = req.body;
+    const numToRemove = data.num;
+
+    let allowed = allowlist.allowedNumbers;
+
+    // verifica se o número existe
+    if (!allowed.includes(numToRemove)) {
+      return res.status(404).json({ erro: "Número não encontrado na allowlist" });
+    }
+
+    // remove o número
+    allowed = allowed.filter(num => num !== numToRemove);
+
+    // atualiza o objeto
+    allowlist.allowedNumbers = allowed;
+
+    await fs.writeFile(
+      "allowlist.json",
+      JSON.stringify(allowlist, null, 2)
+    );
+
+    res.json({ sucesso: true });
+
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 //webhook endpoint
-app.post("/webhook", (req, res) => {
-  
+app.post("/webhook", async (req, res) => {
   //verifica se é o evento de envio de mensagem
   if (req.body.event !== "messages.upsert") {
     return res.sendStatus(200);
@@ -120,7 +152,24 @@ app.post("/webhook", (req, res) => {
 
   //verifica se a mensagem foi enviada pelo próprio usuário 
   if(data.key.fromMe == true){
-    return res.sendStatus(200)
+    return res.sendStatus(200);
+  }
+
+  let allowlist;
+
+  try {
+    const content = await fs.readFile("allowlist.json", "utf8");
+    allowlist = JSON.parse(content);
+  } catch (err) {
+    console.error("Erro ao ler allowlist:", err);
+    return res.sendStatus(500);
+  }
+
+  const allowedNumbers = allowlist.allowedNumbers;
+
+  if (!allowedNumbers.includes(numero)) {
+    console.log(`Número não permitido: ${numero}`);
+    return res.sendStatus(200);
   }
 
   //mostra a mensagem mais recente enviada em até 60 segundos em relação ao tempo atual
