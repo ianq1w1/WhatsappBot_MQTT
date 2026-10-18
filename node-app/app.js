@@ -4,8 +4,12 @@ const fs = require("fs/promises");
 const path = require("path");
 
 const env = require("dotenv").config({ path : ".env-app"})
+
 const aiService_url = process.env.AI_SERVICE_IP;
 const port = process.env.PORT;
+
+const SmartCampus = process.env.SMART_CAMPUS_IP;
+const portSC = process.env.PORT_SC;
 
 console.log(aiService_url);
 
@@ -43,13 +47,33 @@ async function enviarMensagem(numero, texto) {
 }
 
 
-//funcao para enviar texto pro endpoint da IA
+//funcao para enviar texto pro endpoint da IA para retornar comandos em formato Json
 async function IAsend(texto){
 
   //endpoint do norberto
   const response = await fetch(`http://${aiService_url}:${port}/norberto_embedding`, {
     method: 'POST',
-    //a apikey deve estar no .env-app, ele é gerado junto com a instância
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      texto: texto
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro ao enviar para IA: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data
+
+}
+
+async function SmartCampusSend(comando){
+  const response = await fetch(`http://${SmartCampus}:${portSC}/...INSIRA_ENDPOINT`, {
+    method: 'POST',
+    
     headers: {
       'Content-Type': 'application/json'
     },
