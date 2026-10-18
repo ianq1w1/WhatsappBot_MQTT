@@ -3,13 +3,14 @@ const ollama = require("ollama").default;
 const fs = require("fs/promises");
 const path = require("path");
 
-//const env = require("dotenv").config({ path : ".env-app"})
-//const ollama_url = process.env.OLLAMA_IP;
+const env = require("dotenv").config({ path : ".env-app"})
+const aiService_url = process.env.AI_SERVICE_IP;
+const port = process.env.PORT;
 
-console.log(ollama_url);
+console.log(aiService_url);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, "frontend/html")));
 
 //faz com que o html apareça
@@ -20,7 +21,7 @@ app.get("/", (req, res) => {
 //enviar mensagem via HTTP
 async function enviarMensagem(numero, texto) {
   //esse ultimo no final é o nome da instancia
-  const response = await fetch('http://${ollama_url}:8080/message/sendText/testeV3', {
+  const response = await fetch(`http://${aiService_url}:${port}/message/sendText/testeV3`, {
     method: 'POST',
     //a apikey deve estar no .env-app, ele é gerado junto com a instância
     headers: {
@@ -43,18 +44,30 @@ async function enviarMensagem(numero, texto) {
 
 
 //funcao para enviar texto pro endpoint da IA
-async function IAsend(text){
-  //app.post("/")
+async function IAsend(texto){
 
-  const response = await ollama.chat({
-  model: 'qwen3.5:2b',
-  options: {temperature: 0.1},
-  messages: [
-    {role: 'system', content: 'você só fala em português, se o texto for em inglês, você diz que não sabe, ou evita tocar no assunto, mas em hipótese nenhuma fale em inglês'},
-    { role: 'user', content: text }]
-})
-  console.log(response.message.content)
+  //endpoint do norberto
+  const response = await fetch(`http://${aiService_url}:${port}/norberto_embedding`, {
+    method: 'POST',
+    //a apikey deve estar no .env-app, ele é gerado junto com a instância
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      texto: texto
+    })
+  })
+  
+
+  if (!response.ok) {
+    throw new Error(`Erro ao enviar mensagem: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data
+
 }
+
 
 
 //endpoint pra inserir dados na allowlist.json
@@ -89,9 +102,41 @@ app.post("/insert", async (req,res) => {
 
 })
 
+app.post("/delete", async (req, res) => {
+  try {
+    const content = await fs.readFile("allowlist.json", "utf8");
+    const allowlist = JSON.parse(content);
+
+    const data = req.body;
+    const numToRemove = data.num;
+
+    let allowed = allowlist.allowedNumbers;
+
+    // verifica se o número existe
+    if (!allowed.includes(numToRemove)) {
+      return res.status(404).json({ erro: "Número não encontrado na allowlist" });
+    }
+
+    // remove o número
+    allowed = allowed.filter(num => num !== numToRemove);
+
+    // atualiza o objeto
+    allowlist.allowedNumbers = allowed;
+
+    await fs.writeFile(
+      "allowlist.json",
+      JSON.stringify(allowlist, null, 2)
+    );
+
+    res.json({ sucesso: true });
+
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 //webhook endpoint
-app.post("/webhook", (req, res) => {
-  
+app.post("/webhook", async (req, res) => {
   //verifica se é o evento de envio de mensagem
   if (req.body.event !== "messages.upsert") {
     return res.sendStatus(200);
@@ -120,21 +165,47 @@ app.post("/webhook", (req, res) => {
 
   //verifica se a mensagem foi enviada pelo próprio usuário 
   if(data.key.fromMe == true){
-    return res.sendStatus(200)
+    return res.sendStatus(200);
+  }
+
+  let allowlist;
+
+  try {
+    const content = await fs.readFile("allowlist.json", "utf8");
+    allowlist = JSON.parse(content);
+  } catch (err) {
+    console.error("Erro ao ler allowlist:", err);
+    return res.sendStatus(500);
+  }
+
+  const allowedNumbers = allowlist.allowedNumbers;
+
+  if (!allowedNumbers.includes(numero)) {
+    console.log(`Número não permitido: ${numero}`);
+    return res.sendStatus(200);
   }
 
   //mostra a mensagem mais recente enviada em até 60 segundos em relação ao tempo atual
   message = data.message?.conversation 
-  if(ageSeconds < 60){
-    console.log({
-      numero, texto: data.message?.conversation});
-       //IAsend(message)
-      //console.log("mensagem enviada para a IA")
-    console.log(message)
-      return res.sendStatus(200);
-  }
-  return res.sendStatus(200);
+if (ageSeconds < 60 && message) {
+  console.log({
+    numero,
+    texto: message
+  });
 
+  console.log("Mensagem enviada para a IA");
+
+  try {
+    const resposta = await IAsend(message);
+
+    console.log("Resposta da IA");
+    console.log(resposta);
+  } catch (error) {
+    console.error("Erro ao enviar mensagem para a IA:", error);
+  }
+}
+
+return res.sendStatus(200);
 });
 
 app.listen(3000, () => {
