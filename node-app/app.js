@@ -67,18 +67,37 @@ async function IAsend(texto){
 
   const data = await response.json()
   return data
-
 }
 
-async function SmartCampusSend(comando){
-  const response = await fetch(`http://${SmartCampus}:${portSC}/...INSIRA_ENDPOINT`, {
+//funcao com proposito de converter o comando em json do microsserviço para um indice
+//este indice é o que a API do smartcampus espera (nao é a melhor maneira mas tudo bem)
+//it works at least
+function ComandoToIndice(data){
+  const comando = data?.[0]?.comando;
+  console.log(comando)
+  console.log("chegou em toIndice")
+  switch(comando){
+    case "ligar_ar":
+      return numero = 0;
+      
+    case "desligar_ar":
+      return numero = 1;
+      
+    default:
+      console.log("comando indisponivel");
+  }
+}
+
+async function SmartCampusSend(numero){
+  console.log("chegou em SMARTcampus")
+  const response = await fetch(`http://${SmartCampus}:${portSC}/smartcampus/comandos/LABF04/retransmitir`, {
     method: 'POST',
     
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      texto: texto
+      indice: numero
     })
   })
   
@@ -224,6 +243,11 @@ if (ageSeconds < 60 && message) {
 
     console.log("Resposta da IA");
     console.log(resposta);
+    //envia o comando para esta função para retornar um numero do indice
+    let indice = ComandoToIndice(resposta);
+    //indice é enviado para o endpoint da API smartcampus
+    SmartCampusSend(indice);
+    
   } catch (error) {
     console.error("Erro ao enviar mensagem para a IA:", error);
   }
