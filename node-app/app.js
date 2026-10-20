@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/html/main.html"));
 });
 
-//enviar mensagem via HTTP
+//enviar mensagem para o Whatsapp via HTTP
 async function enviarMensagem(numero, texto) {
   //esse ultimo no final é o nome da instancia
   const response = await fetch(`http://${aiService_url}:${port}/message/sendText/testeV3`, {
@@ -69,6 +69,33 @@ async function IAsend(texto){
   return data
 }
 
+async function qwen_resposta(texto) {
+    console.log("chegou no qwen");
+
+    const response = await fetch(
+        `http://${aiService_url}:${port}/qwen_resposta`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                texto: typeof texto === 'string'
+                    ? texto
+                    : JSON.stringify(texto)
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const erro = await response.text();
+        console.error("Erro do FastAPI:", erro);
+        throw new Error(`Erro ao enviar para IA: ${response.status}`);
+    }
+
+    return await response.json();
+}
+
 //funcao com proposito de converter o comando em json do microsserviço para um indice
 //este indice é o que a API do smartcampus espera (nao é a melhor maneira mas tudo bem)
 //it works at least
@@ -85,6 +112,7 @@ function ComandoToIndice(data){
       
     default:
       console.log("comando indisponivel");
+      return numero = -100
   }
 }
 
@@ -239,15 +267,20 @@ if (ageSeconds < 60 && message) {
   console.log("Mensagem enviada para a IA");
 
   try {
-    const resposta = await IAsend(message);
+    const respostaEmbedding = await IAsend(message);
 
-    console.log("Resposta da IA");
-    console.log(resposta);
+
+    console.log("Resposta da IA")
+    console.log(respostaEmbedding);
+    console.log("resposta do qwen:");
+    console.log(qwen_resposta(respostaEmbedding))
     //envia o comando para esta função para retornar um numero do indice
-    let indice = ComandoToIndice(resposta);
-    //indice é enviado para o endpoint da API smartcampus
-    SmartCampusSend(indice);
+    let indice = ComandoToIndice(respostaEmbedding);
     
+    //indice é enviado para o endpoint da API smartcampus
+    if(indice != -100){
+      SmartCampusSend(indice);
+    }
   } catch (error) {
     console.error("Erro ao enviar mensagem para a IA:", error);
   }
